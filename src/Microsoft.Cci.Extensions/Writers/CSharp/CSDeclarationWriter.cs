@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using Microsoft.Cci.Extensions;
@@ -127,10 +128,31 @@ namespace Microsoft.Cci.Writers.CSharp
             WriteSymbol("]");
         }
 
+        public void WriteAssemblyVersion(IAssembly assembly)
+        {
+            _writer.Write(String.Format("[assembly:System.Reflection.AssemblyVersionAttribute(\"{0}\")]", assembly.Version));
+            _writer.WriteLine();
+        }
+
         public void WriteAssemblyDeclaration(IAssembly assembly)
         {
             WriteAttributes(assembly.Attributes, prefix: "assembly");
             WriteAttributes(assembly.SecurityAttributes, prefix: "assembly");
+        }
+
+        public void WriteTypeForwardedTo(IAssembly assembly)
+        {
+            var forwardedTypeNames = assembly
+                .GetForwardedTypes()
+                .Where(t => !(t.AliasedType is INestedTypeDefinition || t.AliasedType is Dummy))
+                .Select(t => TypeHelper.GetTypeName(t.AliasedType, NameFormattingOptions.TypeParameters | NameFormattingOptions.EmptyTypeParameterList | NameFormattingOptions.UseTypeKeywords))
+                .OrderBy(name => name, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var typeName in forwardedTypeNames)
+            {
+                _writer.Write(String.Format("[assembly:System.Runtime.CompilerServices.TypeForwardedToAttribute(typeof({0}))]", typeName));
+                _writer.WriteLine();
+            }
         }
 
         public void WriteMemberDeclaration(ITypeDefinitionMember member)

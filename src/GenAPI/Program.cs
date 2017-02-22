@@ -146,7 +146,7 @@ namespace GenAPI
                 default:
                 case WriterType.CSDecl:
                     {
-                        CSharpWriter writer = new CSharpWriter(syntaxWriter, filter, s_apiOnly);
+                        CSharpWriter writer = new CSharpWriter(syntaxWriter, filter, s_apiOnly, s_assemblyAttributes, s_assemblyVersion, s_typeForwardedTo);
                         writer.IncludeSpaceBetweenMemberGroups = writer.IncludeMemberGroupHeadings = s_memberHeadings;
                         writer.HighlightBaseMembers = s_hightlightBaseMembers;
                         writer.HighlightInterfaceMembers = s_hightlightInterfaceMembers;
@@ -233,6 +233,9 @@ namespace GenAPI
         private static string s_out;
         private static string s_libPath;
         private static bool s_apiOnly;
+        private static bool s_assemblyAttributes;
+        private static bool s_assemblyVersion;
+        private static bool s_typeForwardedTo;
         private static bool s_memberHeadings;
         private static bool s_hightlightBaseMembers;
         private static bool s_hightlightInterfaceMembers;
@@ -260,6 +263,9 @@ namespace GenAPI
                 parser.DefineAliases("apiOnly", "api");
                 parser.DefineOptionalQualifier("apiOnly", ref s_apiOnly, "(-api) [CSDecl] Include only API's not CS code that compiles.");
                 parser.DefineOptionalQualifier("all", ref s_all, "Include all API's not just public APIs. Default is public only.");
+                parser.DefineOptionalQualifier("assemblyAttributes", ref s_assemblyAttributes, "Include assembly attributes. Default is false.");
+                parser.DefineOptionalQualifier("assemblyVersion", ref s_assemblyVersion, "Include assembly version attribute. Default is false.");
+                parser.DefineOptionalQualifier("typeForwardedTo", ref s_typeForwardedTo, "Include TypeForwardedTo attributes for forwarded types. Default is false.");
                 parser.DefineAliases("memberHeadings", "mh");
                 parser.DefineOptionalQualifier("memberHeadings", ref s_memberHeadings, "(-mh) [CSDecl] Include member headings for each type of member.");
                 parser.DefineAliases("hightlightBaseMembers", "hbm");
