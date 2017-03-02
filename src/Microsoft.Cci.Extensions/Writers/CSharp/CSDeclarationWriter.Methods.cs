@@ -130,10 +130,10 @@ namespace Microsoft.Cci.Writers.CSharp
             else
             {
                 // For In/Out we should not emit them until we find a scenario that is needs thems.
-                //if (parameter.IsIn)
-                //   WriteFakeAttribute("System.Runtime.InteropServices.In", writeInline: true);
-                //if (parameter.IsOut)
-                //    WriteFakeAttribute("System.Runtime.InteropServices.Out", writeInline: true);
+                if (parameter.IsIn)
+                   WriteFakeAttribute("System.Runtime.InteropServices.In", writeInline: true);
+                if (parameter.IsOut)
+                    WriteFakeAttribute("System.Runtime.InteropServices.Out", writeInline: true);
                 if (parameter.IsByReference)
                     WriteKeyword("ref");
             }
