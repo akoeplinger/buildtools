@@ -18,6 +18,28 @@ namespace Microsoft.Cci.Filters
 
         public bool ExcludeAttributes { get; set; }
 
+        bool IsMonoAttributeType(ITypeDefinition type)
+        {
+            string name = type?.FullName();
+            switch (name)
+            {
+                case "System.MonoTODOAttribute":
+                    return true;
+                case "System.MonoDocumentationNoteAttribute":
+                    return true;
+                case "System.MonoExtensionAttribute":
+                    return true;
+                case "System.MonoInternalNoteAttribute":
+                    return true;
+                case "System.MonoLimitationAttribute":
+                    return true;
+                case "System.MonoNotSupportedAttribute":
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         public virtual bool Include(INamespaceDefinition ns)
         {
             // Only include non-empty namespaces
@@ -28,6 +50,8 @@ namespace Microsoft.Cci.Filters
         {
             if (type == null || Dummy.Type == type)
                 return false;
+            if (IsMonoAttributeType(type))
+                return true;
             return type.IsVisibleOutsideAssembly();
         }
 
@@ -36,7 +60,7 @@ namespace Microsoft.Cci.Filters
             if (member == null)
                 return false;
 
-            if (!member.ContainingTypeDefinition.IsVisibleOutsideAssembly())
+            if (!member.ContainingTypeDefinition.IsVisibleOutsideAssembly() && !IsMonoAttributeType(member.ContainingTypeDefinition))
                 return false;
 
             switch (member.Visibility)
@@ -60,6 +84,9 @@ namespace Microsoft.Cci.Filters
 
         public virtual bool Include(ICustomAttribute attribute)
         {
+            if (IsMonoAttributeType(attribute.Type?.ResolvedType))
+                return true;
+
             if (this.ExcludeAttributes)
                 return false;
 
