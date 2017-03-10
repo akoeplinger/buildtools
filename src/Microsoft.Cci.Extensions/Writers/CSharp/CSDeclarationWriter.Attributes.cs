@@ -111,6 +111,10 @@ namespace Microsoft.Cci.Writers.CSharp
 
             attributes = attributes.OrderBy(a => a, new AttributeComparer(_filter, _forCompilation));
 
+            // MONO HACK, don't upstream
+            attributes = attributes.Except(attributes.Where(x => x.Type.FullName() == "System.Runtime.CompilerServices.ReferenceAssemblyAttribute").Skip(1));
+            //
+
             bool first = true;
             WriteSymbol("[");
 
