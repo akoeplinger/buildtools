@@ -29,6 +29,9 @@ namespace Microsoft.Cci.Writers.CSharp
                 return;
             }
 
+            if (method.ReturnValueIsMarshalledExplicitly)
+                WriteExplicitMarshalling(method.ReturnValueMarshallingInformation, writeInline: false, prefix: "return: ");
+
             string name = method.GetMethodName();
 
             if (!method.ContainingTypeDefinition.IsInterface)
@@ -125,15 +128,20 @@ namespace Microsoft.Cci.Writers.CSharp
 
             if (parameter.IsOut && !parameter.IsIn && parameter.IsByReference)
             {
+                if (parameter.IsMarshalledExplicitly)
+                    WriteExplicitMarshalling(parameter.MarshallingInformation, writeInline: true);
+
                 WriteKeyword("out");
             }
             else
             {
                 // For In/Out we should not emit them until we find a scenario that is needs thems.
                 if (parameter.IsIn)
-                   WriteFakeAttribute("System.Runtime.InteropServices.In", writeInline: true);
+                    WriteFakeAttribute("System.Runtime.InteropServices.In", writeInline: true);
                 if (parameter.IsOut)
                     WriteFakeAttribute("System.Runtime.InteropServices.Out", writeInline: true);
+                if (parameter.IsMarshalledExplicitly)
+                    WriteExplicitMarshalling(parameter.MarshallingInformation, writeInline: true);
                 if (parameter.IsByReference)
                     WriteKeyword("ref");
             }
@@ -145,6 +153,16 @@ namespace Microsoft.Cci.Writers.CSharp
                 WriteSymbol("=");
                 WriteMetadataConstant(parameter.DefaultValue, parameter.Type);
             }
+        }
+
+        private void WriteExplicitMarshalling(IMarshallingInformation marshallingInfo, bool writeInline, string prefix = "")
+        {
+            string type = string.Format("System.Runtime.InteropServices.UnmanagedType.{0}", marshallingInfo.UnmanagedType);
+
+            if (marshallingInfo.CustomMarshaller is Dummy)
+                WriteFakeAttribute(prefix + "System.Runtime.InteropServices.MarshalAs", writeInline, type);
+            else
+                WriteFakeAttribute(prefix + "System.Runtime.InteropServices.MarshalAs", writeInline, type, string.Format("MarshalType = \"{0}\"", TypeHelper.GetTypeName(marshallingInfo.CustomMarshaller)));
         }
 
         private void WriteInterfaceMethodModifiers(IMethodDefinition method)

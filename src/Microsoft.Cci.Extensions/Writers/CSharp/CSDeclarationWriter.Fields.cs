@@ -24,6 +24,9 @@ namespace Microsoft.Cci.Writers.CSharp
                 WriteFakeAttribute("System.NonSerializedAttribute");
             }
 
+            if (field.IsMarshalledExplicitly)
+                WriteExplicitMarshalling(field.MarshallingInformation, writeInline: false);
+
             if (!field.ContainingTypeDefinition.IsEnum)
             {
                 WriteVisibility(field.Visibility);
