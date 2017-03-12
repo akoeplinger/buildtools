@@ -237,15 +237,48 @@ namespace Microsoft.Cci.Writers.CSharp
             _writer.Write(literal);
         }
 
-        private void WriteTypeName(ITypeReference type, bool noSpace = false, bool isDynamic = false, bool useTypeKeywords = true)
+        private void WriteTypeName(ITypeReference type, bool noSpace = false, bool useTypeKeywords = true, IEnumerable<ICustomAttribute> attributes = null, int typeIndex = 0, bool omitTypeArguments = false)
         {
-            if (isDynamic)
+            ICustomAttribute dynamicAttribute;
+            if (attributes != null && IsDynamic(attributes, out dynamicAttribute))
             {
-                WriteKeyword("dynamic", noSpace: noSpace);
-                return;
+                if (dynamicAttribute.Arguments.Count() == 0)
+                {
+                    WriteKeyword("dynamic", noSpace: noSpace);
+                    return;
+                }
+
+                var array = (IMetadataCreateArray)dynamicAttribute.Arguments.ElementAt(0);
+                var hasDynamicEntry = ((bool)((IMetadataConstant)array.Initializers.ElementAt(typeIndex)).Value == true);
+
+                if (hasDynamicEntry)
+                {
+                    WriteKeyword("dynamic", noSpace: noSpace);
+                    return;
+                }
+
+                if (type is IGenericTypeInstanceReference)
+                {
+                    WriteTypeName(type, noSpace: true, omitTypeArguments: true);
+                    typeIndex++;
+                    _writer.WriteSymbol("<");
+
+                    var argumentCount = ((IGenericTypeInstanceReference)type).GenericArguments.Count();
+                    foreach (var t in ((IGenericTypeInstanceReference)type).GenericArguments)
+                    {
+                        WriteTypeName(t, noSpace: true, useTypeKeywords: useTypeKeywords, attributes: attributes, typeIndex: typeIndex);
+                        argumentCount--;
+                        typeIndex++;
+                        if (argumentCount > 0)
+                            _writer.WriteSymbol(",");
+                    }
+                    _writer.WriteSymbol(">");
+                    if (!noSpace) WriteSpace();
+                    return;
+                }
             }
 
-            NameFormattingOptions namingOptions = NameFormattingOptions.TypeParameters;
+            NameFormattingOptions namingOptions = omitTypeArguments ? NameFormattingOptions.OmitTypeArguments : NameFormattingOptions.TypeParameters;
 
             if (useTypeKeywords)
                 namingOptions |= NameFormattingOptions.UseTypeKeywords;

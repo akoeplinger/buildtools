@@ -66,7 +66,7 @@ namespace Microsoft.Cci.Writers.CSharp
             if (property.ReturnValueIsByRef)
                 WriteKeyword("ref");
 
-            WriteTypeName(property.Type, isDynamic: IsDynamic(property.Attributes));
+            WriteTypeName(property.Type, attributes: property.Attributes);
 
             if (isIndexer)
             {

@@ -53,11 +53,11 @@ namespace Microsoft.Cci.Writers.CSharp
             WriteMethodBody(method);
         }
 
-        private void WriteTypeName(ITypeReference type, ITypeReference containingType, bool isDynamic = false)
+        private void WriteTypeName(ITypeReference type, ITypeReference containingType, IEnumerable<ICustomAttribute> attributes)
         {
             var useKeywords = containingType.GetTypeName() != type.GetTypeName();
 
-            WriteTypeName(type, isDynamic: isDynamic, useTypeKeywords: useKeywords);
+            WriteTypeName(type, attributes: attributes, useTypeKeywords: useKeywords);
         }
 
         private void WriteMethodDefinitionSignature(IMethodDefinition method, string name)
@@ -72,7 +72,7 @@ namespace Microsoft.Cci.Writers.CSharp
                     WriteKeyword("ref");
 
                 // We are ignoring custom modifiers right now, we might need to add them later.
-                WriteTypeName(method.Type, method.ContainingType, isDynamic: IsDynamic(method.ReturnValueAttributes));
+                WriteTypeName(method.Type, method.ContainingType, attributes: method.ReturnValueAttributes);
             }
 
             WriteIdentifier(name);
@@ -81,7 +81,7 @@ namespace Microsoft.Cci.Writers.CSharp
             {
                 WriteSpace();
 
-                WriteTypeName(method.Type, method.ContainingType);
+                WriteTypeName(method.Type, method.ContainingType, attributes: null);
             }
 
             Contract.Assert(!(method is IGenericMethodInstance), "Currently don't support generic method instances");
@@ -146,7 +146,7 @@ namespace Microsoft.Cci.Writers.CSharp
                     WriteKeyword("ref");
             }
 
-            WriteTypeName(parameter.Type, containingType, isDynamic: IsDynamic(parameter.Attributes));
+            WriteTypeName(parameter.Type, containingType, attributes: parameter.Attributes);
             WriteIdentifier(parameter.Name);
             if (parameter.IsOptional && parameter.HasDefaultValue)
             {

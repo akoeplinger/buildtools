@@ -402,12 +402,25 @@ namespace Microsoft.Cci.Writers.CSharp
 
         private static bool IsDynamic(IEnumerable<ICustomAttribute> attributes)
         {
+            ICustomAttribute temp;
+            return IsDynamic(attributes, out temp);
+        }
+
+        private static bool IsDynamic(IEnumerable<ICustomAttribute> attributes, out ICustomAttribute dynamicAttribute)
+        {
+            dynamicAttribute = null;
+
+            if (attributes == null)
+                return false;
+
             foreach (var attribute in attributes)
             {
                 if (attribute.Type.AreEquivalent("System.Runtime.CompilerServices.DynamicAttribute"))
+                {
+                    dynamicAttribute = attribute;
                     return true;
+                }
             }
-
             return false;
         }
 
