@@ -226,10 +226,19 @@ namespace Microsoft.Cci.Writers.CSharp
             IMetadataTypeOf type = expression as IMetadataTypeOf;
             if (type != null)
             {
-                WriteKeyword("typeof", noSpace: true);
-                WriteSymbol("(");
-                WriteTypeName(type.TypeToGet, noSpace: true);
-                WriteSymbol(")");
+                if (type.TypeToGet.GetDefinitionOrNull()?.IsVisibleOutsideAssembly() == false)
+                {
+                    WriteSymbol("\"");
+                    WriteTypeName(type.TypeToGet, noSpace: true);
+                    WriteSymbol("\"");
+                }
+                else
+                {
+                    WriteKeyword("typeof", noSpace: true);
+                    WriteSymbol("(");
+                    WriteTypeName(type.TypeToGet, noSpace: true);
+                    WriteSymbol(")");
+                }
                 return;
             }
 

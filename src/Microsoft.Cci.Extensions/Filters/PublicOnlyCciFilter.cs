@@ -68,18 +68,33 @@ namespace Microsoft.Cci.Filters
             if (attributeDef != null && !attributeDef.IsVisibleOutsideAssembly())
                 return false;
 
-            // Ignore attributes with typeof argument of a type invisible outside the assembly
+            // Ignore attributes with typeof argument of a type invisible outside the assembly,
+            // except for cases where the typeof argument can be replaced by a string argument
             foreach(var arg in attribute.Arguments.OfType<IMetadataTypeOf>())
             {
                 var typeDef = arg.TypeToGet.GetDefinitionOrNull();
                 if (typeDef == null)
                     continue;
 
-                if (!typeDef.IsVisibleOutsideAssembly())
+                if (!typeDef.IsVisibleOutsideAssembly() && !IsAttributeWithTypeofParameterReplacableByString(attribute))
                     return false;
             }
 
             return true;
+        }
+
+        private static bool IsAttributeWithTypeofParameterReplacableByString(ICustomAttribute attribute)
+        {
+            string typeName = attribute.FullName();
+
+            switch (typeName)
+            {
+                case "System.Diagnostics.DebuggerTypeProxyAttribute": return true;
+                case "System.ComponentModel.TypeConverterAttribute": return true;
+                case "System.ComponentModel.TypeDescriptionProviderAttribute": return true;
+                case "System.ComponentModel.InstallerTypeAttribute": return true;
+            }
+            return false;
         }
     }
 }
